@@ -1,10 +1,848 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <title>Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>* GHOSTING PEN</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+      <script src="https://kit.fontawesome.com/f936906ae0.js" crossorigin="anonymous"></script>
   </head>
   <body>
-    <h1>Hello World!</h1>
+        <div id="container">
+  <a href="/"><div id="header"></div></a>
+            <div id="flex">
+                <aside id="leftSidebar" style="margin-right: 0px;">
+                    <h2><center>CHANGELOG</center></h2>
+                    <center><p>last update: <span id="lastupdate"></span></p></center>
+                    <div class="box3" style="overflow-y:scroll">
+                        <ul style="padding-left:20px;">
+                        <li>8/05/25 - my <a href="/recipes/tagliatelle">go-to pasta</a> recipe</li>
+                        <li>8/03/25 - my <a href="/recipes/kimchijjigae">kimchi jjigae</a> recipe</li>
+                        <li>8/01/25 - new <a href="/blog/aug25/journalingsystemtips">blog post</a>: how to find your ideal journaling system</li>
+                        <li>5/27/25 - updated cosplay performance history with <a href="https://ghostingpen.neocities.org/cosplay/perfhistory">2025</a> performances!</li>
+                        <li>4/08/25 - wrote about my current <a href="/writing/currentprocess">writing process</a>!</li>
+                        <li>4/01/25 - posted my <a href="/writing/gentips">general writing tips</a>!</li>
+                        <li>3/19/25 - updated <a href="/fiction/fanficprojects">fanfiction</a> page with <a href="https://archiveofourown.org/works/63988936">new stephen/near</a> fic</li>
+                        <li>3/08/25 - new <a href="/blog/mar25/stopusingindieauthors">blog post</a>: anti-kindle unlimited
+                        <li>2/27/25 - new <a href="/blog/feb25/gotothelibrary">blog post</a> re: the library</li>
+                        <li>2/19/25 - posted my <a href="/journaling/currentsetup">2025 techo kaigi!</a></li>
+                        <li>2/10/25 - <a href="/cosplay/goals">my cosplay goals</a></li>
+                        <li>1/30/25 - added an excerpt of my 2022 novel, <a href="https://ghostingpen.neocities.org/fiction/faceclaim">faceclaim</a></li>
+                        </ul>
+                    </div>
+  <p></p>
+    <center><div class="box">
+    <div id="musicplayer">
+          <div class="box">
+          <div class="now-playing"></div></div>
+          <div class="box">  
+         <marquee scrollamount="8" class="track-info">
+                <div class="track-name"></div>
+                <div class="track-artist"></div>
+            </marquee></div>
+<p></p>
+            <div class="controls">
+                <div class="seeking">
+                    <div class="current-time">00:00</div>
+
+                    <input type="range" min="1" max="100" value="0" class="seek_slider" onchange="seekTo()">
+
+                    <div class="total-duration">0:00</div>
+                </div>
+
+                <div class="buttons">
+                    <div class="prev-track" onclick="prevTrack()">&#10094;</div>
+
+                    <div class="playpause-track" onclick="playpauseTrack()">&#9655;</div>
+
+                    <div class="next-track" onclick="nextTrack()">&#10095;</div>
+                </div>
+
+                <div class="volume">
+                    <div class="volume-icon">&#128266;</div>
+                    <input type="range" min="1" max="100" value="25" class="volume_slider" onchange="setVolume()"> <!-- the default volume value is 25, change this if you want it to be higher or lower (i wouldn't recommend it bc it gets really loud) -->
+                </div>
+            </div>
+
+            <audio id="music" src=""></audio>
+        </div>
+
+        <script>
+            // initiate variables
+            let now_playing = document.querySelector(".now-playing");
+            let track_name = document.querySelector(".track-name");
+            let track_artist = document.querySelector(".track-artist");
+
+
+            let playpause_btn = document.querySelector(".playpause-track");
+            let next_btn = document.querySelector(".next-track");
+            let prev_btn = document.querySelector(".prev-track");
+
+            let seek_slider = document.querySelector(".seek_slider");
+            let volume_slider = document.querySelector(".volume_slider");
+            let curr_time = document.querySelector(".current-time");
+            let total_duration = document.querySelector(".total-duration");
+
+            let track_index = 0;
+            let isPlaying = false;
+            let updateTimer;
+
+            // create new audio element
+            let curr_track = document.getElementById("music");
+            
+            //
+            // DEFINE YOUR SONGS HERE!!!!!
+            // MORE THAN FOUR SONGS CAN BE ADDED!!
+            // JUST ADD ANOTHER BRACKET WITH NAME ARTIST AND PATH
+            // CATBOX.MOE IS RECOMMENDED FOR UPLOADING MP3 FILES IF YOU DON'T HAVE NEOCITIES SUPPORTER
+            let track_list = [
+            {
+                name:"ghost fight - UNDERTALE",
+                path:"https://files.catbox.moe/n59ebe.mp3"
+            },
+            {
+                name:"dummy! - UNDERTALE",
+                path:"https://files.catbox.moe/z3sfqa.mp3"
+            },
+            {
+                name:"spider dance - UNDERTALE",
+                path:"https://files.catbox.moe/cjnptq.mp3"
+            },
+            {
+                name: "death by glamour - UNDERTALE",
+                path: "https://files.catbox.moe/hiidpx.mp3",
+            },
+             {
+                name: "mad mew mew - UNDERTALE",
+                path: "https://files.catbox.moe/i6q0ml.mp3",
+            },
+            {
+                name:"NOW'S YOUR CHANCE TO BE - DELTARUNE",
+                path: "https://files.catbox.moe/39c3f2.mp3",
+            },
+            {
+                name:"BIG SHOT - DELTARUNE",
+                path: "https://files.catbox.moe/ldc7z2.mp3",
+            },
+        ];
+        //
+            //
+            //
+            //
+            //
+
+            function loadTrack(track_index){
+                clearInterval(updateTimer);
+                resetValues();
+
+                // load a new track
+                curr_track.src = track_list[track_index].path;
+                curr_track.load();
+
+                // update details of the track
+                track_name.textContent = track_list[track_index].name;
+                track_artist.textContent = track_list[track_index].artist;
+                now_playing.textContent = "now playing " + (track_index + 1) + " / " + track_list.length;
+
+                // set an interval of 1000 milliseconds for updating the seek slider
+                updateTimer = setInterval(seekUpdate, 1000);
+
+                // move to the next track if the current one finishes playing 
+                curr_track.addEventListener("ended", nextTrack);
+
+            }
+
+            // reset values
+            function resetValues(){
+                curr_time.textContent = "0:00";
+                total_duration.textContent = "0:00";
+                seek_slider.value = 0;
+            }
+
+            // load the first track in the tracklist
+            loadTrack(track_index);
+
+            // checks if song is playing
+            function playpauseTrack(){
+                if (!isPlaying) playTrack();
+                else pauseTrack();
+            }
+
+            // plays track when play button is pressed
+            function playTrack(){
+                curr_track.play();
+                isPlaying = true;
+
+                // replace icon with the pause icon
+                playpause_btn.innerHTML = '&#9646;';
+            }
+
+            // pauses track when pause button is pressed
+            function pauseTrack(){
+                curr_track.pause();
+                isPlaying = false;
+
+                playpause_btn.innerHTML = '&#9654;';
+            }
+
+            // moves to the next track
+            function nextTrack(){
+                if (track_index < track_list.length - 1)
+                    track_index += 1;
+                else track_index = 0;
+                loadTrack(track_index);
+                playTrack();
+            }
+
+            // moves to the previous track
+            function prevTrack(){
+                if (track_index > 0)
+                    track_index -= 1;
+                else track_index = track_list.length;
+                loadTrack(track_index);
+                playTrack();
+            }
+
+            // seeker slider
+            function seekTo(){
+                seekto = curr_track.duration * (seek_slider.value / 100);
+                curr_track.currentTime = seekto;
+            }
+
+            // volume slider
+            function setVolume(){
+                curr_track.volume = volume_slider.value / 100;
+            }
+
+            setVolume();
+
+            function seekUpdate(){
+                let seekPosition = 0;
+                
+                // check if the current track duration is a legible number
+                if (!isNaN(curr_track.duration)){
+                    seekPosition = curr_track.currentTime * (100 / curr_track.duration);
+                    seek_slider.value = seekPosition;
+
+                    // calculate the time left and the total duration
+                    let currentMinutes = Math.floor(curr_track.currentTime / 60);
+                    let currentSeconds = Math.floor(curr_track.currentTime - currentMinutes * 60);
+                    let durationMinutes = Math.floor(curr_track.duration / 60);
+                    let durationSeconds = Math.floor(curr_track.duration - durationMinutes * 60);
+
+                    // adding a zero to the single digit time values
+                    if (currentSeconds < 10){ currentSeconds = "0" + currentSeconds; }
+                    if (durationSeconds < 10){ durationSeconds = "0" + durationSeconds; }
+                    if (currentMinutes < 10){ currentMinutes = currentMinutes; }
+                    if (durationMinutes < 10){ durationMinutes = durationMinutes; }
+
+                    curr_time.textContent = currentMinutes + ":" + currentSeconds;
+                    total_duration.textContent = durationMinutes + ":" + durationSeconds;
+                }
+            }
+        </script></div></center>
+  <p></p>
+                    <h2><center>RESOURCES</center></h2>
+                    <div class="box">
+                    <ul style="padding-left:25px;">
+                        <li><a href="/writing/">FICTION WRITING</a></li>
+                        <li><a href="/journaling/">JOURNALING</a></li>
+                        <li><a href="/pocket/">SAVED ARTICLES</a></li>
+                        <li><a href="/links/">LINK DIRECTORY</a></li>
+                    </ul>
+                    </div>
+                    <p></p>
+                    <center><h2>FIND ME!</h2></center>
+                    <div class="box"><center>
+                    <a href="https://ghostingpen.tumblr.com/"><img src="https://ghostingpen.neocities.org/photos/tumblrbutton.png"></a>
+<br>
+<a href="https://archiveofourown.org/users/minki/works"><img src="https://ghostingpen.neocities.org/photos/ao3button.png"></a>
+<br>
+<a href="https://bsky.app/profile/ghostingpen.bsky.social/"><img src="https://ghostingpen.neocities.org/photos/twitterbutton.png"></a>
+<br>
+<a href="https://www.youtube.com/@coffeeghostcosplay"><img src="https://ghostingpen.neocities.org/photos/youtubebutton.png"></a>
+<br>
+<a href="https://www.tiktok.com/@ghostingpen"><img src="https://ghostingpen.neocities.org/photos/tiktokbutton.png"></a>
+</center>
+<br>
+<b>EMAIL:</b>
+ghostingpen [AT] gmail.com
+<br>
+<b>DISCORD:</b> ghostingpen</div>
+
+<p><img src="https://ghostingpen.neocities.org/photos/deconapstablook.png" style="max-width:100%;
+max-height:100%;"></p>
+                    
+                </aside>
+                <main>
+                    <h1>welcome to ghosting pen....</h1>
+        <p>* hi and welcome to <b>ghosting pen</b>! come on in. sit down, listen to some tunes, read an educational article or two, or just parallel play... i don't judge here :3</p>
+<p>* this site is my means of escape from social media, tucked away from the oppressive weight of the current state of the internet</p>
+<p>* it will contain recommendations of media i enjoy, access to helpful resources i frequent, and more things that i love and want to share with the public. i love talking about the things i love, and this is my way of expressing myself and being able to do that...</p>
+<p>* i'm the kind of person whose easiest way to make connections is through finding shared interests, so please chat with me if our special interests align. even if they don't, teach me something about your special interest anyway! i love getting emails if they're fun and educational.</p>
+<p>* this website is best viewed on a computer or tablet, and it may not display as well on mobile! my deepest apologies</p>
+<p>* i hope you have fun with it! it's currently UNDER CONSTRUCTION, so bear with me as i build this website bit by bit!</p>
+
+<p><center><img src="https://ghostingpen.neocities.org/photos/idbanner1.png" alt="genderpunk" title="genderpunk"><img src="https://ghostingpen.neocities.org/photos/idbanner6.png" alt="nonbinary lesbian" title="nonbinary lesbian"><img src="https://ghostingpen.neocities.org/photos/idbanner7.png" alt="gray aro-ace" title="gray aro-ace"><img src="https://ghostingpen.neocities.org/photos/idbanner5.png" alt="it/its" title="it/its">
+<br>
+<img src="https://ghostingpen.neocities.org/photos/idbanner10.png" alt="therian" title="therian"><img src="https://ghostingpen.neocities.org/photos/idbanner3.png" alt="ghostboy" title="ghostboy"><img src="https://ghostingpen.neocities.org/photos/idbanner4.png" alt="ratgender" title="ratgender"><img src="https://ghostingpen.neocities.org/photos/idbanner12.png" alt="furry" title="furry">
+<br>
+<img src="https://ghostingpen.neocities.org/photos/idbanner9.png" alt="disabled (neurodivergent)" title="disabled (autistic)"><img src="https://ghostingpen.neocities.org/photos/idbanner8.png" alt="partnered times 2" title="partnered times 2"><img src="https://ghostingpen.neocities.org/photos/idbanner11.png" alt="cyberpunk" title="cyberpunk"><img src="https://ghostingpen.neocities.org/photos/idbanner13.png" alt="final fantasy 14 reaper" title="final fantasy 14 reaper">
+</center></p>
+
+<h2><center>like what i do?</center></h2>
+
+<p><center><a href="https://ko-fi.com/ghostingpen"><img src="https://ghostingpen.neocities.org/photos/kofibutton.png" width="125"height="auto"></a>
+<br>
+<a href="https://www.amazon.com/hz/wishlist/ls/B0Z9TDNYR5DN?ref_=wl_share"><img src="https://ghostingpen.neocities.org/photos/wishlistbutton.png" width="125"height="auto"></a></center></p>
+
+<p><center><a href="https://neocities.org/site/ghostingpen"><img src="https://ghostingpen.neocities.org/photos/B1FED66E-E129-46AD-BAC7-49398F2107B3.gif" width=88px height=34px></a> <a href="https://neocities.org/"><img src="https://ghostingpen.neocities.org/photos/deletetwitter.gif" width=88px height=34px></a> <a href="https://neocities.org/tutorials"><img src="https://ghostingpen.neocities.org/photos/pinkneocities.jpg" width=88px height=34px></a></center></p>
+<center><h2>WEBRINGS</h2></center>
+<div class="box3" style="overflow-y:scroll">
+<center><script src="https://dokodemo.neocities.org/pokering/pokering.js"></script>
+<pokering-script site="https://ghostingpen.neocities.org"></pokering-script>
+
+<p><journal-ring icon="green"></journal-ring><script async src="https://cdn.jsdelivr.net/gh/js044/nenrikido@main/static/js/misc/journalring.js"></script></p>
+
+<p> <map name="noairing">
+<area href="https://baccyflap.com/noai" target="_blank" shape="rect" coords="15,15,124,66" alt="no ai webring" title="no ai webring">
+<area href="https://baccyflap.com/noai/?prv&s=ghp" target="_top" shape="rect" coords="15,79,34,100" alt="previous" title="previous">
+<area href="https://baccyflap.com/noai/?rnd" target="_top" shape="rect" coords="44,71,95,108" alt="random" title="random">
+<area href="https://baccyflap.com/noai/?nxt&s=ghp" target="_top" shape="rect" coords="105,79,125,100" alt="next" title="next">
+</map>
+<img usemap="#noairing" src="https://baccyflap.com/noai/widget.gif" style="width:250px;height:124px" alt="an image of a little blue toy robot in a red-tinted circle made of art from all over the world. there's a red line, also made of art, running through the robot. next to it are the words NO AI WEBRING / HUMAN MADE 100% GUARANTEED and then two arrows, one pointing left, one right"> </p>
+
+<p><div id="autiring">
+<script type="text/javascript" src="https://ballonlea.neocities.org/autiring/onionring-variables.js"></script>
+<script type="text/javascript" src="https://ballonlea.neocities.org/autiring/onionring-widget.js"></script>
+</div></p>
+
+<p><script src="https://transring.neocities.org/ring.js" data-widget="cloud"></script></p>
+
+
+<p><!--START OF SELF INSERT WEBRING-->
+			<div id="selfinsertwebring">
+				<script src="https://koinuko.neocities.org/shipping/webring/tryitscript.js"></script>
+					<body onload="setListNumber(), myFunction()"/>
+			
+			<!--IN THE SECTION BELOW, PLEASE CHANGE THE 0 (ZERO) TO WHATEVER-->
+			<!--NUMBER YOU WERE ASSIGNED! THANK YOU!  <3-->
+			
+				<script>
+					function setListNumber() {
+					positionInList = 274
+				    };
+				</script>
+			</div>
+			<!--END OF SELF INSERT WEBRING-->
+</p>
+</center></div>
+<P></P>
+<div class="box2" style="overflow-y:scroll">
+<h2>CURRENTLY...</h2>
+<ul>
+<li><b>watching</b>: planner setup youtube videos</li>
+<li><b>reading</b>: big magic</li>
+<li><b>working on</b>: my novel <i>neuroticism</i></li>
+<li><b>next convention</b>: popcult anime con</li>
+</ul>
+</div>
+
+<div class="box2" style="overflow-y:scroll">
+<h2>TO-DO LIST</h2>
+<ul>
+<li>recipes:
+<ul>
+<li><s>cherry tomato pasta</s></li>
+<li>budae jigae</li>
+<li>kimchi tuna fried rice</li>
+</ul>
+</li>
+<li>inventory:
+<ul>
+<li>every day carry</li>
+<li>bag collection</li>
+<li>daily tech</li>
+</ul>
+</li>
+<li>shrines:
+<ul>
+<li>undertale / deltarune</li>
+<li>death note</li>
+<li>persona 5</li>
+<li>pokemon mystery dungeon</li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+                </main>
+         <aside id="rightSidebar" style="margin-left: 0px;"><h2><center>REC CENTER</center></h2>
+            <div class="box">
+                <ul style="padding-left:30px;">
+                        <li><a href="/manga/">MANGA LIBRARY</a></li>
+                        <li><a href="/books/">BOOKSHELF</a></li>
+                        <li><a href="/games/">GAME CABINET</a></li>
+                        <li><a href="/stationery/">DESK DRAWER</a></li>
+                        <li><a href="/inventory/">INVENTORY</a> (coming soon!)</li>
+                </ul>
+            </div>
+            <p></p>
+            <a href="https://my.cbox.ws/ghostingpen"><h2><center>SIGN MY GUESTBOOK!</center></h2></a>
+            <p>
+<iframe src="https://www3.cbox.ws/box/?boxid=3522768&boxtag=WZL6HG" width="100%" height="450" allowtransparency="yes" allow="autoplay" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto"></iframe>	
+            </p>
+            <h2><center>STATUS</center></h2>
+            <div id="statuscafe"><div id="statuscafe-username"></div><div id="statuscafe-content"></div></div><script src="https://status.cafe/current-status.js?name=ghostingpen" defer></script> 
+            <p></p>
+          <h2><center>LINK ME</center></h2>
+<center><a href="https://ghostingpen.neocities.org/"><img src="https://ghostingpen.neocities.org/photos/button.gif"></a></center>
+<p><center><pre>&lt;a href="https://ghostingpen.neocities.org/"&gt;&lt;img src=""&gt;&lt;/a&gt;</pre></center></p>
+<p><center>( no hotlinking pls! )</center></p>
+            </div>
+            
+            </aside>
+          
+         <nav id="navbar">
+                    <ul>
+                        <li><a href="/about">ABOUT</a></li>
+                        <li><a href="/blog">BLOG</a></li>
+                        <li><a href="/fiction/">FICTION</a></li>
+                        <li><a href="/cosplay/">COSPLAY</a></li>
+                        <li><a href="/recipes">RECIPES</a></li>
+                    </ul>
+                </nav>
+                <script>     
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+     var site_data = JSON.parse(this.responseText);
+     var num_arr = site_data.info.views.toString().split("");
+var num_str = "";
+for (i = 0; i < num_arr.length; i++) {
+        num_str += `<img src="/photos/c` + num_arr[i] + `.gif"/>`;
+ if ( (num_arr.length-1 - i) % 3 == 0 && (num_arr.length-1 - i) != 0 ) 
+var date_str = site_data.info.last_updated;
+var date_obj = new Date(site_data.info.last_updated);
+document.getElementById("lastupdate").innerHTML = (date_obj.getMonth()+1) + "-" + date_obj.getDate() + "-" + date_obj.getFullYear();
+}
+document.getElementById("hitcount").innerHTML = num_str;
+    }
+  };
+  xhttp.open("GET", "https://weirdscifi.ratiosemper.com/neocities.php?sitename=ghostingpen", true);
+  xhttp.send();
+</script>
+<p><center><span id="hitcount"></span> </center></p>
+                <center><p><a href="/sitemap"><img src="/photos/sitemapheart.png" width="12" length="12" alt="sitemap"></a></center>
+            <footer id="footer" style="margin-top: 0px;">© 2022-<script type="text/javascript">document.write( new Date().getFullYear() );</script> victor blair</footer>
+        </div>
+        
+        <link rel="shortcut icon" type="image/x-icon" href="https://ghostingpen.neocities.org/photos/favicon.png">
+        <!-- THIS IS THE CSS !-->
+        <style>
+            :root {
+                --header-image: url('https://ghostingpen.neocities.org/photos/1e88867648daf3e05353612d9a2cb901.png');
+                --body-bg-image: url('');
+
+                /* colors */
+                --content: #43256E;
+            }
+
+
+           @font-face {
+                font-family: Pixel Operator;
+                src: url('https://ghostingpen.neocities.org/fonts/PixelOperator.ttf');
+            }
+
+            @font-face {
+                font-family: Pixel Operator;
+                src: url('https://ghostingpen.neocities.org/fonts/PixelOperator-Bold.ttf');
+                font-weight: bold;
+            }
+
+            body {
+                font-family: 'Pixel Operator', sans-serif;
+                margin: 0;
+                background-color: #000000;
+                background-size: 500px;
+                color: #ffffff;
+                background-image: var(--body-bg-image);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+            
+            a:hover {
+              text-decoration:none;
+            }
+
+           
+            #container {
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+           
+            #container a {
+                color: #d82b2b;
+                font-weight: bold;
+                text-decoration: none;
+                /* if you want to remove the underline
+      you can add a line below here that says:
+      text-decoration:none; */
+            }
+            
+            #container a:hover {
+                color: #FFFF00;
+                font-weight: bold;
+                text-decoration: none;
+                /* if you want to remove the underline
+      you can add a line below here that says:
+      text-decoration:none; */
+            }
+            
+
+            #header {
+                width: 100%;
+                background-color: #000000;
+                /* header color here! */
+                height: 150px;
+                /* this is only for a background image! */
+                /* if you want to put images IN the header, 
+      you can add them directly to the <div id="header"></div> element! */
+                background-image: var(--header-image);
+                background-size: 100%;
+                 background-repeat: no-repeat;
+            }
+
+            /* navigation section!! */
+            #navbar {
+                height: 60px;
+                background-color: #000000;
+                /* navbar color */
+                width: 100%;
+            }
+
+            #navbar ul {
+                display: flex;
+                padding: 20px;
+                margin: 25px;
+                list-style-type: none;
+                justify-content: space-evenly;
+            }
+
+            #navbar li {
+                padding-top: 10px;
+            }
+
+            /* navigation links*/
+            #navbar li a {
+                color: #ff7124;
+                /* navbar text color */
+                font-weight: 800;
+                text-decoration: none;
+                outline:solid;
+                outline-offset:5px;
+                outline-color: #ff7124;
+                /* this removes the underline */
+            }
+
+            /* navigation link when a link is hovered over */
+            #navbar li a:hover {
+              text-decoration: none;
+                outline:solid;
+                outline-offset:5px;
+                outline-color: #ffff00;
+            }
+
+            #flex {
+                display: flex;
+            }
+
+            /* this colors BOTH sidebars
+    if you want to style them separately,
+    create styles for #leftSidebar and #rightSidebar */
+            aside {
+                background-color: #000000;
+                width: 215px;
+                padding: 20px;
+                outline:solid;
+                outline-color: #ffffff;
+                /* this makes the sidebar text slightly smaller */
+            }
+
+
+            /* this is the color of the main content area,
+    between the sidebars! */
+            main {
+                background-color: #000000;
+                flex: 1;
+                padding: 20px;
+                order: 2;
+                outline:solid;
+                outline-color: #ffffff;
+                
+            }
+
+            /* what's this "order" stuff about??
+    allow me to explain!
+    if you're using both sidebars, the "order" value
+    tells the CSS the order in which to display them.
+    left sidebar is 1, content is 2, and right sidebar is 3! */
+
+            */ #leftSidebar {
+                order: 1;
+            }
+
+            #rightSidebar {
+                order: 3;
+            }
+
+            footer {
+                background-color: #000000;
+                /* background color for footer */
+                width: 100%;
+                height: 40px;
+                padding: 10px;
+                text-align: center;
+                outline:solid;
+                outline-color: #ffffff;
+                /* this centers the footer text */
+            }
+
+            h1,
+            h2,
+            h3 {
+                color: #ffffff;
+                margin-top:5px;
+            }
+
+            h1 {
+                font-size: 35px;
+            }
+            
+            h2 {
+                font-size: 25px;
+            }
+            
+            h3 {
+                font-size: 20px;
+            }
+
+            strong {
+                color: #ffffff;
+            }
+
+            /* this is just a cool box, it's the darker colored one */
+            .box {
+                background-color: #000000;
+                border: 1px solid #ffffff;
+                padding: 10px;
+            }
+            
+            * {
+              box-sizing: border-box;
+            }
+            
+            .box2 {
+                background-color: #000000;
+                border: 1px solid #ffffff;
+                padding: 10px;
+                width: 50%;
+                height: 230px;
+                float: left;
+            }
+            
+             .box3 {
+                background-color: #000000;
+                border: 1px solid #ffffff;
+                padding: 10px;
+                height: 250px;
+             }
+            
+            
+            .clearfix::after {
+             content: "";
+             clear: both;
+             display: table;
+            }
+
+            /* CSS for extras */
+
+            #topBar {
+                width: 100%;
+                height: 30px;
+                padding: 10px;
+                font-size: smaller;
+                background-color: #13092D;
+            }
+            
+          pre {
+  display: block;
+  background-color: gray;
+  border: 2px solid #ffffff;
+  font-size:12px;
+  font-family: monospace;
+  white-space: pre-wrap;
+    overflow-x: auto;
+  overflow-y: scroll;
+  margin: 1em 0;
+  max-width:200px
+} 
+
+        #statuscafe {
+    padding: .5em;
+    background-color: black;
+    border: 1px solid white;
+    border-radius: 15px;
+}
+#statuscafe-username {
+    margin-bottom: .5em;
+}
+#statuscafe-content {
+    margin: 0 1em 0.5em 1em;
+}
+
+        <style>
+            #musicplayer{
+                background:black; /* background color of player */
+                border:4px solid white; /* border around player */
+                width:100%; /* width of the player - make it 100% if you want it to fill your container */
+                padding:10px;
+                text-align:center; 
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+            }
+
+            .songtitle, .track-info, .now-playing{
+                padding:5px;
+            }
+
+            .controls{
+                display:flex; 
+                flex-direction:column; 
+                gap:10px;
+            }
+
+            .buttons{
+                display:flex;
+                justify-content:center;
+                font-size:12px !important; /* size of controls */
+                width:100%;
+            }
+
+            .buttons div{
+                width:33.3%;
+            }
+
+            .playpause-track, .prev-track, .next-track{
+                font-family:arial;
+                color:white; /* color of buttons */
+                font-size:20px !important; /* size of buttons */
+            }
+
+            .volume-icon{
+                font-size:22px !important; /* size of volume icon */
+            }
+
+            .seeking, .volume{
+                display:flex;
+                flex-direction:row;
+                align-items:center;
+                gap:5px;
+            }
+
+            .now-playing, .track-info{
+                background-color:black; /* background color of top two boxes */
+            }
+
+            .track-name{
+                font-weight:bold;
+            }
+
+            input[type=range]{
+              background:black;
+                width:100%;
+                
+            }
+
+            input[type=range]:focus{
+                outline:none; /* removes outline around tracks when focusing */
+            }
+
+            input[type=range]::-webkit-slider-runnable-track{
+                width:100%;
+                height:4px; /* thickness of seeking track */
+                background:white; /* color of seeking track */
+            }
+
+            input[type=range]::-webkit-slider-thumb{
+                height:10px; /* height of seeking square */
+                width:10px; /* width of seeking square */
+                border-radius:0px; /* change to 5px if you want a circle seeker */
+                background:white; /* color of seeker square */
+                -webkit-appearance:none;
+                margin-top:-3px; /* fixes the weird margin around the seeker square in chrome */
+            }
+
+            input[type=range]::-moz-range-track{
+                width:100%;
+                height:4px; /* thickness of seeking track */
+                background:white; /* color of seeking track */
+            }
+
+            input[type=range]::-moz-range-thumb{
+                height:10px; /* height of seeking square */
+                width:10px; /* width of seeking square */
+                border-radius:0px; /* change to 5px if you want a circle seeker */
+                background:white; /* color of seeker square */
+                border:none; /* removes weird border around seeker square in firefox */
+            }
+
+            /* BELOW THIS POINT IS MEDIA QUERY */
+
+            /* so you wanna change the width of your page? 
+    by default, the container width is 900px.
+    in order to keep things responsive, take your new height,
+    and then subtrack it by 100. use this new number as the 
+    "max-width" value below
+    */
+
+            @media only screen and (max-width: 800px) {
+                #flex {
+                    flex-wrap: wrap;
+                }
+
+                aside {
+                    width: 100%;
+                }
+
+                /* the order of the items is adjusted here for responsiveness!
+      since the sidebars would be too small on a mobile device.
+      feel free to play around with the order!
+      */
+                main {
+                    order: 1;
+                }
+
+                #leftSidebar {
+                    order: 2;
+                }
+
+                #rightSidebar {
+                    order: 3;
+                }
+
+                #navbar ul {
+                    flex-wrap: wrap;
+                }
+            }
+        </style>
+
+    
   </body>
 </html>
+
